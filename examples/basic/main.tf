@@ -1,3 +1,4 @@
+
 provider "azurerm" {
   features {}
 }
@@ -26,6 +27,7 @@ module "vnet" {
   subnets = {
     "workload-subnet" = {
       address_prefixes = ["10.0.1.0/24"]
+      nsg_id           = azurerm_network_security_group.example.id
     }
   }
 
@@ -35,6 +37,23 @@ module "vnet" {
   }
 }
 
+resource "azurerm_network_security_group" "example" {
+  name                = "nsg-terraform-module-test"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+
+    security_rule {
+    name                       = "AllowVnetInbound"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+}
 
 output "vnet_id" {
   value = module.vnet.vnet_id
